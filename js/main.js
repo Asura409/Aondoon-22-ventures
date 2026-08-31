@@ -1,5 +1,9 @@
 /* ANDOON 22 JEWELRY — Shared behaviour */
 
+function formatPrice(n){
+  return n.toLocaleString("en-NG");
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const IMG = "assets/images/";
 
@@ -24,12 +28,17 @@ document.addEventListener("DOMContentLoaded", () => {
   scrim?.addEventListener("click", closeMenu);
   document.querySelectorAll(".mobile-menu a").forEach(a => a.addEventListener("click", closeMenu));
 
+  /* ---------- Announcement bar dismiss ---------- */
+  const announce = document.querySelector(".announce");
+  const announceClose = document.querySelector(".announce-close");
+  announceClose?.addEventListener("click", () => announce?.remove());
+
   /* ---------- Header background on scroll ---------- */
   const header = document.querySelector(".site-header");
   const onScroll = () => {
     if(!header) return;
-    if(window.scrollY > 30){ header.style.background = "rgba(8,8,8,0.92)"; }
-    else{ header.style.background = "rgba(8,8,8,0.72)"; }
+    if(window.scrollY > 30){ header.style.background = "rgba(255,255,255,0.98)"; }
+    else{ header.style.background = "rgba(255,255,255,0.92)"; }
   };
   window.addEventListener("scroll", onScroll, { passive:true });
   onScroll();
@@ -85,6 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
     a.innerHTML = `
       <div class="product-media">
         <span class="product-tag">${p.category}</span>
+        ${p.isNew ? `<span class="product-tag product-tag-new">New</span>` : ""}
         <img src="${IMG}${p.images[0]}" alt="${p.name}" loading="lazy">
         ${vitrineHTML()}
         <span class="product-quickview">View Details</span>
@@ -92,7 +102,6 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="product-info">
         <div class="cat">${p.category}</div>
         <h3>${p.name}</h3>
-        <div class="price">${CURRENCY}${p.price.toFixed(2)}</div>
       </div>`;
     revealObserve(a);
     return a;
@@ -109,26 +118,46 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ---------- Full shop grid with filters ---------- */
   const shopGrid = document.querySelector("[data-shop-grid]");
   if(shopGrid){
-    const tabs = document.querySelectorAll(".filter-tabs button");
+    const tabs = document.querySelectorAll(".filter-tabs button[data-cat]");
+    const newToggle = document.querySelector("[data-new-toggle]");
     const countEl = document.querySelector("[data-result-count]");
     const params = new URLSearchParams(window.location.search);
     let activeCat = params.get("category") || "All";
+    const searchTerm = (params.get("search") || "").trim().toLowerCase();
+    let newOnly = params.get("sort") === "new";
+    const toolbarHeading = document.querySelector("[data-shop-heading]");
 
     function render(){
       shopGrid.innerHTML = "";
-      const list = activeCat === "All" ? PRODUCTS : PRODUCTS.filter(p => p.category === activeCat);
+      let list = activeCat === "All" ? PRODUCTS : PRODUCTS.filter(p => p.category === activeCat);
+      if(newOnly){
+        list = list.filter(p => p.isNew);
+      }
+      if(searchTerm){
+        list = list.filter(p =>
+          p.name.toLowerCase().includes(searchTerm) ||
+          p.category.toLowerCase().includes(searchTerm) ||
+          p.material.toLowerCase().includes(searchTerm)
+        );
+      }
       if(!list.length){
-        shopGrid.innerHTML = `<div class="empty-state">No pieces in this collection yet — check back soon.</div>`;
+        shopGrid.innerHTML = `<div class="empty-state">No pieces found — try a different search or category.</div>`;
       } else {
         list.forEach((p, i) => shopGrid.appendChild(productCard(p, i)));
       }
       if(countEl) countEl.textContent = `${list.length} piece${list.length === 1 ? "" : "s"}`;
       tabs.forEach(t => t.classList.toggle("active", t.getAttribute("data-cat") === activeCat));
+      newToggle?.classList.toggle("active", newOnly);
+      if(toolbarHeading) toolbarHeading.textContent = newOnly ? "New Arrivals" : "The Full Collection";
     }
     tabs.forEach(t => t.addEventListener("click", () => {
       activeCat = t.getAttribute("data-cat");
       render();
     }));
+    newToggle?.addEventListener("click", () => {
+      newOnly = !newOnly;
+      render();
+    });
     render();
   }
 
@@ -164,7 +193,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     pdRoot.querySelector("[data-pd-cat]").textContent = product.category;
     pdRoot.querySelector("[data-pd-name]").textContent = product.name;
-    pdRoot.querySelector("[data-pd-price]").textContent = `${CURRENCY}${product.price.toFixed(2)}`;
     pdRoot.querySelector("[data-pd-desc]").textContent = product.description;
     pdRoot.querySelector("[data-pd-material]").textContent = product.material;
     pdRoot.querySelector("[data-pd-category]").textContent = product.category;
