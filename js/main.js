@@ -91,15 +91,6 @@ document.addEventListener("DOMContentLoaded", () => {
     a.href = `product.html?id=${p.id}`;
     a.className = "product-card reveal";
     a.style.setProperty("--i", index % 8);
-    const hasDiscount = p.originalPrice && p.originalPrice > p.price;
-    const pct = hasDiscount ? Math.round(100 - (p.price / p.originalPrice) * 100) : 0;
-    const priceHTML = hasDiscount
-      ? `<div class="price">
-           <span class="price-now">${CURRENCY}${formatPrice(p.price)}</span>
-           <span class="price-was">${CURRENCY}${formatPrice(p.originalPrice)}</span>
-           <span class="price-badge">-${pct}%</span>
-         </div>`
-      : `<div class="price">${CURRENCY}${formatPrice(p.price)}</div>`;
     a.innerHTML = `
       <div class="product-media">
         <span class="product-tag">${p.category}</span>
@@ -111,7 +102,6 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="product-info">
         <div class="cat">${p.category}</div>
         <h3>${p.name}</h3>
-        ${priceHTML}
       </div>`;
     revealObserve(a);
     return a;
@@ -203,17 +193,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     pdRoot.querySelector("[data-pd-cat]").textContent = product.category;
     pdRoot.querySelector("[data-pd-name]").textContent = product.name;
-    const pdPriceEl = pdRoot.querySelector("[data-pd-price]");
-    const pdHasDiscount = product.originalPrice && product.originalPrice > product.price;
-    if(pdHasDiscount){
-      const pdPct = Math.round(100 - (product.price / product.originalPrice) * 100);
-      pdPriceEl.innerHTML = `
-        <span class="price-now">${CURRENCY}${formatPrice(product.price)}</span>
-        <span class="price-was">${CURRENCY}${formatPrice(product.originalPrice)}</span>
-        <span class="price-badge">-${pdPct}%</span>`;
-    } else {
-      pdPriceEl.textContent = `${CURRENCY}${formatPrice(product.price)}`;
-    }
     pdRoot.querySelector("[data-pd-desc]").textContent = product.description;
     pdRoot.querySelector("[data-pd-material]").textContent = product.material;
     pdRoot.querySelector("[data-pd-category]").textContent = product.category;
